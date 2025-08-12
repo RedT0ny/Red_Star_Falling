@@ -1,4 +1,4 @@
-# --- Red Core Wargame Engine ---
+# --- Core Wargame Engine ---
 # This file contains the foundational, reusable classes for any hex-based wargame.
 
 import collections
@@ -7,43 +7,6 @@ import collections
 # Cube coordinates make many hex grid calculations (like distance) much simpler.
 # q + r + s must always equal 0.
 Hex = collections.namedtuple("Hex", ["q", "r", "s"])
-
-class GameUnit:
-    """
-    Represents a single unit on the game board.
-    This class is designed to be extended for specific game units.
-    """
-    def __init__(self, unit_id, name, owner, location_hex):
-        self.unit_id = unit_id  # A unique identifier for the unit
-        self.name = name          # e.g., "7th Panzer Division"
-        self.owner = owner        # e.g., "NATO" or "Warsaw Pact"
-        self.location = location_hex  # A Hex object for its current position
-
-        # Core combat and movement attributes
-        self.attack = 0
-        self.defense = 0
-        self.movement_points_max = 0
-        self.current_movement_points = 0
-
-        # Unit status
-        self.is_destroyed = False
-        self.is_disrupted = False
-
-    def move_to(self, new_hex):
-        """Moves the unit to a new hex."""
-        self.location = new_hex
-
-    def reset_movement(self):
-        """Resets the unit's movement points at the start of its turn."""
-        self.current_movement_points = self.movement_points_max
-
-    def expend_movement(self, cost):
-        """Expends movement points."""
-        self.current_movement_points -= cost
-
-    def __repr__(self):
-        return f"{self.name} ({self.owner}) at {self.location}"
-
 
 class HexTile:
     """
