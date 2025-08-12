@@ -1,0 +1,97 @@
+# --- Red Core Wargame Engine ---
+# This file contains the foundational, reusable classes for any hex-based wargame.
+
+import collections
+
+# A named tuple to hold cube coordinates for our hexagonal grid.
+# Cube coordinates make many hex grid calculations (like distance) much simpler.
+# q + r + s must always equal 0.
+Hex = collections.namedtuple("Hex", ["q", "r", "s"])
+
+class GameUnit:
+    """
+    Represents a single unit on the game board.
+    This class is designed to be extended for specific game units.
+    """
+    def __init__(self, unit_id, name, owner, location_hex):
+        self.unit_id = unit_id  # A unique identifier for the unit
+        self.name = name          # e.g., "7th Panzer Division"
+        self.owner = owner        # e.g., "NATO" or "Warsaw Pact"
+        self.location = location_hex  # A Hex object for its current position
+
+        # Core combat and movement attributes
+        self.attack = 0
+        self.defense = 0
+        self.movement_points_max = 0
+        self.current_movement_points = 0
+
+        # Unit status
+        self.is_destroyed = False
+        self.is_disrupted = False
+
+    def move_to(self, new_hex):
+        """Moves the unit to a new hex."""
+        self.location = new_hex
+
+    def reset_movement(self):
+        """Resets the unit's movement points at the start of its turn."""
+        self.current_movement_points = self.movement_points_max
+
+    def expend_movement(self, cost):
+        """Expends movement points."""
+        self.current_movement_points -= cost
+
+    def __repr__(self):
+        return f"{self.name} ({self.owner}) at {self.location}"
+
+
+class HexTile:
+    """
+    Represents a single tile on the map. It contains a Hex coordinate and
+    terrain information.
+    """
+    def __init__(self, hex_coord, terrain_type="Clear"):
+        self.hex = hex_coord
+        self.terrain_type = terrain_type
+        self.units = []  # List of GameUnit objects currently on this tile
+
+        # Terrain-specific properties
+        self.movement_cost = self.get_movement_cost()
+        self.defense_bonus = self.get_defense_bonus()
+
+    def add_unit(self, unit):
+        """Adds a unit to this tile and updates the unit's location."""
+        if unit not in self.units:
+            self.units.append(unit)
+            unit.location = self.hex
+
+    def remove_unit(self, unit):
+        """Removes a unit from this tile."""
+        if unit in self.units:
+            self.units.remove(unit)
+
+    def get_movement_cost(self, unit_type=None):
+        """
+        Returns the movement cost for this terrain.
+        This can be expanded to depend on the unit_type (e.g., tanks in forest).
+        """
+        terrain_costs = {
+            "Clear": 1,
+            "Forest": 2,
+            "Hill": 2,
+            "City": 3,
+            "River": float('inf'), # Impassable for now
+        }
+        return terrain_costs.get(self.terrain_type, 1)
+
+    def get_defense_bonus(self):
+        """Returns the defensive bonus for this terrain."""
+        terrain_bonuses = {
+            "Forest": 2,
+            "Hill": 3,
+            "City": 4,
+        }
+        return terrain_bonuses.get(self.terrain_type, 0)
+
+    def __repr__(self):
+        return f"Tile({self.hex}, {self.terrain_type})"
